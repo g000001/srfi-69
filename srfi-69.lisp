@@ -2,10 +2,6 @@
 
 (cl:in-package :srfi-69.internal)
 
-(def-suite srfi-69)
-
-(in-suite srfi-69)
-
 (defvar *default-bound* (- (expt 2 29) 3))
 
 (define-function (%string-hash s ch-conv bound)
