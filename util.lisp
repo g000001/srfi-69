@@ -23,7 +23,7 @@
   (setf (fdefinition 'string-ref) #'char)
   (setf (fdefinition 'symbol->string) #'string)
   (setf (fdefinition 'string?) #'stringp)
-  (setf (fdefinition 'symbol?) #'stringp)
+  (setf (fdefinition 'symbol?) #'symbolp)
   (setf (fdefinition 'number?) #'numberp)
   (setf (fdefinition 'char?) #'characterp)
   (setf (fdefinition 'real-part) #'realpart)
