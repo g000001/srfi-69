@@ -83,18 +83,26 @@
 	     (appropriate-hash-function-for comparison) (cadr args)))
 	 (size
 	   (if (or (null? args) (null? (cdr args)) (null? (cddr args)))
-	     *default-table-size* (caddr args)))
+               *default-table-size*
+               (caddr args)))
 	 (association
 	   (or (and (eq? comparison #'eq?) #'assq)
 	       (and (eq? comparison #'eqv?) #'assv)
 	       (and (eq? comparison #'equal?) #'assoc)
-	       (letrec
+	       #-ECL
+               (letrec
 		 ((associate
 		    (lambda (val alist)
 		      (cond ((null? alist) nil)
 			    ((funcall comparison val (caar alist)) (car alist))
 			    (:else (associate val (cdr alist)))))))
-		 associate))))
+		 associate)
+               #+ECL
+               (labels ((associate (val alist)
+                          (cond ((null? alist) nil)
+                                ((funcall comparison val (caar alist)) (car alist))
+                                (:else (associate val (cdr alist))))))
+		 #'associate))))
     (%make-hash-table 0 hash comparison association (make-vector size '()))))
 
 (define-function (make-hash-table-maker comp hash)
