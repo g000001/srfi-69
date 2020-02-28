@@ -1,4 +1,5 @@
-(cl:in-package :srfi-69.internal)
+(cl:in-package "https://github.com/g000001/srfi-69#internals")
+
 
 (progn
   (setf (fdefinition 'eq?) #'eq)
@@ -32,55 +33,72 @@
   (setf (fdefinition 'string-ci=?) #'string-equal)
   )
 
+
 (defmacro set! (var val)
   `(setq ,var ,val))
+
 
 (declaim (inline list-tail vector-set! list-ref vector->list list->vector
                  quotient set-car! set-cdr! eqv? equal?
                  assq assv assoc for-each))
 
+
 (defun for-each (fn &rest lists)
   (apply #'mapc fn lists)
   nil)
 
+
 (defun assq (item alist)
   (cl:assoc item alist :test #'eq?))
+
 
 (defun assv (item alist)
   (cl:assoc item alist :test #'eqv?))
 
+
 (defun assoc (item alist)
   (cl:assoc item alist :test #'equal?))
+
 
 (defun eqv? (x y)
   (eql x y))
 
+
 (defun equal? (x y)
   (equal x y))
+
 
 (defun set-car! (list obj)
   (rplaca list obj))
 
+
 (defun set-cdr! (cons x)
   (rplacd cons x))
+
 
 (defun quotient (x y)
   (values (truncate x y)))
 
+
 (defun list-tail (list k)
   (nthcdr k list))
+
 
 (defun list-ref (list k)
   (nth k list))
 
+
 (defun vector-set! (vec index val)
   (setf (aref vec index) val))
+
 
 (defun vector->list (vec)
   (coerce vec 'list))
 
+
 (defun list->vector (list)
   (coerce list 'vector))
+
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun to-proper-lambda-list (list)
@@ -94,9 +112,11 @@
                   ,(cdr last)))))
       (symbol `(cl:&rest ,list)))))
 
+
 (defmacro lambda (args &rest body)
   `(cl:lambda ,(to-proper-lambda-list args)
      ,@body))
+
 
 (defmacro letrec ((&rest binds) &body body)
   `(let (,@(mapcar (cl:lambda (x)
@@ -121,34 +141,52 @@
         `(defun ,name ,(to-proper-lambda-list args)
            ,@body))
       `(progn
+         (declaim (ftype function ,name-args))
          (setf (fdefinition ',name-args)
                ,(car body)))))
 
+
 (declaim (inline vector-ref))
+
+
 (defun vector-ref (vec k)
   (svref vec k))
 
+
 (declaim (inline modulo))
+
+
 (defun modulo (x y)
   (mod x y))
+
 
 (defmacro begin (&body body)
   `(progn ,@body))
 
+
 (declaim (inline make-vector))
+
+
 (defun make-vector (size &optional (init 0))
   (cl:make-array size                   ;***
                  :initial-element init
                  :adjustable nil
                  :fill-pointer nil))
 
+
 (declaim (inline string-append))
+
+
 (defun string-append (&rest strings)
   (format nil "~{~A~}" strings))
 
+
 (declaim (inline number->string))
+
+
 (defun number->string (num)
   (write-to-string num))
+
 
 (defmacro dolex ((&rest varlist) endlist &body body)
   (let* ((vars (mapcar (lambda (v)
@@ -170,4 +208,5 @@
                         varlist )))
     `(cl:do ,binds ,endlist ,@body) ))
 
-;;; eof
+
+;;; *EOF*

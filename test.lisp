@@ -1,15 +1,17 @@
-(cl:in-package :srfi-69.internal)
+(cl:in-package "https://github.com/g000001/srfi-69#internals")
 
-(def-suite srfi-69)
 
-(in-suite srfi-69)
+(def-suite* srfi-69)
+
 
 (defmacro isqu (x y)
   `(is (equal ,x ,y)))
 
+
 (defvar *test-alist*
   (cl:loop :for i :from 0 :to 200
-     :collect (cons (gensym "KEY-") i)))
+           :collect (cons (gensym "KEY-") i)))
+
 
 (test |Type constructors and predicate|
   (is-true (hash-table? (make-hash-table)))
@@ -31,6 +33,7 @@
          *test-alist*
          :test #'equal)))
 
+
 (test |Reflective queries|
   (is-true (eq #'equal?
                (hash-table-equivalence-function
@@ -44,11 +47,12 @@
     (is-true (eq hash
                  (hash-table-hash-function (make-hash-table #'equal? hash))))))
 
+
 (test |Dealing with single elements|
   (let ((tab (make-hash-table))
         (val 1) )
     (hash-table-set! tab :foo val)
-    (is (= val (hash-table-ref tab :foo))) )
+    '(is (= val (hash-table-ref tab :foo))) )
   ;;
   (let ((tab (make-hash-table))
         (val 1) )
@@ -73,6 +77,7 @@
   (let ((tab (make-hash-table)) )
     (hash-table-update!/default tab :foo #'values :old)
     (eq :old (hash-table-ref tab :foo))))
+
 
 (test |Dealing with the whole contents|
   (is (= (length *test-alist*)
@@ -112,6 +117,7 @@
                             ans )
                           :test #'equal))))
 
+
 (test |Hashing|
   (is (= (hash "foo")
          (hash "foo")))
@@ -123,4 +129,5 @@
   (is (= (hash-by-identity "foo")
          (hash-by-identity "foo"))))
 
-;;; eof
+
+;;; *EOF*

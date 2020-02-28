@@ -1,4 +1,7 @@
-* SRFI-69: Basic hash tables
+# SRFI 69 for CL: Basic hash tables
+
+* https://srfi.schemers.org/srfi-69
+* License: Unlicense
 
 - Copyright © Panu Kalliokoski (2005). All Rights Reserved.
 

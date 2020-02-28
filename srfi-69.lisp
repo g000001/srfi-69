@@ -1,8 +1,10 @@
 ;;;; srfi-69.lisp
 
-(cl:in-package :srfi-69.internal)
+(cl:in-package "https://github.com/g000001/srfi-69#internals")
+
 
 (defvar *default-bound* (- (expt 2 29) 3))
+
 
 (define-function (%string-hash s ch-conv bound)
   (let ((hash 31)
@@ -13,17 +15,21 @@
 			    (char->integer (funcall ch-conv (string-ref s index))))
 			 *default-bound*)))))
 
+
 (define-function (string-hash s . maybe-bound)
   (let ((bound (if (null? maybe-bound) *default-bound* (car maybe-bound))))
     (%string-hash s (lambda (x) x) bound)))
+
 
 (define-function (string-ci-hash s . maybe-bound)
   (let ((bound (if (null? maybe-bound) *default-bound* (car maybe-bound))))
     (%string-hash s #'char-downcase bound)))
 
+
 (define-function (symbol-hash s . maybe-bound)
   (let ((bound (if (null? maybe-bound) *default-bound* (car maybe-bound))))
     (%string-hash (symbol->string s) (lambda (x) x) bound)))
+
 
 (define-function (hash obj . maybe-bound)
   (let ((bound (if (null? maybe-bound) *default-bound* (car maybe-bound))))
@@ -54,6 +60,7 @@
 
 (define-function hash-by-identity #'hash)
 
+
 (define-function (vector-hash v bound)
   (let ((hashvalue 571)
 	(len (vector-length v)))
@@ -62,10 +69,18 @@
       (set! hashvalue (modulo (+ (* 257 hashvalue) (hash (vector-ref v index)))
 			      *default-bound*)))))
 
+
 (define-function %make-hash-node #'cons)
+
+
 (define-function %hash-node-set-value! #'set-cdr!)
+
+
 (define-function %hash-node-key #'car)
+
+
 (define-function %hash-node-value #'cdr)
+
 
 (define-record-type <srfi-hash-table>
   (%make-hash-table size hash compare associate entries)
@@ -76,7 +91,9 @@
   (associate hash-table-association-function)
   (entries hash-table-entries hash-table-set-entries!))
 
+
 (defvar *default-table-size* 64)
+
 
 ;;; FIXME
 (define-function (appropriate-hash-function-for comparison)
@@ -84,6 +101,7 @@
       (and (eq? comparison #'string=?) #'string-hash)
       (and (eq? comparison #'string-ci=?) #'string-ci-hash)
       #'hash))
+
 
 (define-function (make-hash-table . args)
   (let* ((comparison (if (null? args) #'equal? (car args)))
@@ -114,28 +132,41 @@
 		 #'associate))))
     (%make-hash-table 0 hash comparison association (make-vector size '()))))
 
+
 (define-function (make-hash-table-maker comp hash)
   (lambda args (apply #'make-hash-table (cons comp (cons hash args)))))
+
+
 (define-function make-symbol-hash-table
   (make-hash-table-maker #'eq? #'symbol-hash))
+
+
 (define-function make-string-hash-table
   (make-hash-table-maker #'string=? #'string-hash))
+
+
 (define-function make-string-ci-hash-table
   (make-hash-table-maker #'string-ci=? #'string-ci-hash))
+
+
 (define-function make-integer-hash-table
   (make-hash-table-maker #'= #'modulo))
+
 
 (define-function (%hash-table-hash hash-table key)
   (funcall (hash-table-hash-function hash-table)
            key (vector-length (hash-table-entries hash-table))))
 
+
 (define-function (%hash-table-find entries associate hash key)
   (funcall associate key (vector-ref entries hash)))
+
 
 (define-function (%hash-table-add! entries hash key value)
   (vector-set! entries hash
 	       (cons (%make-hash-node key value)
 		     (vector-ref entries hash))))
+
 
 (define-function (%hash-table-delete! entries compare hash key)
   (declare (optimize (debug 1)))
@@ -151,9 +182,11 @@
                             (:else (loop (cdr current) current)) )))
              (loop (cdr entrylist) entrylist) )))))
 
+
 (define-function (%hash-table-walk proc entries)
   (do ((index (- (vector-length entries) 1) (- index 1)))
     ((< index 0)) (for-each proc (vector-ref entries index))))
+
 
 (define-function (%hash-table-maybe-resize! hash-table)
   (let* ((old-entries (hash-table-entries hash-table))
@@ -170,53 +203,59 @@
 	  old-entries)
 	(hash-table-set-entries! hash-table new-entries)))))
 
+
 (define-function (hash-table-ref hash-table key . maybe-default)
-  (srfi-61:cond
+  (cond
     ((%hash-table-find (hash-table-entries hash-table)
                        (hash-table-association-function hash-table)
                        (%hash-table-hash hash-table key) key)
-     :=> #'%hash-node-value)
+     => #'%hash-node-value)
     ((null? maybe-default)
      (error "hash-table-ref: no value associated with" key) )
-    (:else (funcall (car maybe-default))) ))
+    (else (funcall (car maybe-default))) ))
+
 
 (define-function (hash-table-ref/default hash-table key default)
   (hash-table-ref hash-table key (lambda () default)))
 
+
 (define-function (hash-table-set! hash-table key value)
   (let ((hash (%hash-table-hash hash-table key))
 	(entries (hash-table-entries hash-table)) )
-    (srfi-61:cond
+    (cond
       ((%hash-table-find entries
                          (hash-table-association-function hash-table)
                          hash key)
-       :=> (lambda (node) (%hash-node-set-value! node value)))
-      (:else (%hash-table-add! entries hash key value)
-             (hash-table-set-size! hash-table
-                                   (+ 1 (hash-table-size hash-table)) )
-             (%hash-table-maybe-resize! hash-table) ))))
+       => (lambda (node) (%hash-node-set-value! node value)))
+      (else (%hash-table-add! entries hash key value)
+            (hash-table-set-size! hash-table
+                                  (+ 1 (hash-table-size hash-table)) )
+            (%hash-table-maybe-resize! hash-table) ))))
+
 
 (define-function (hash-table-update! hash-table key function . maybe-default)
   (let ((hash (%hash-table-hash hash-table key))
 	(entries (hash-table-entries hash-table)))
-    (srfi-61:cond
+    (cond
       ((%hash-table-find entries
                          (hash-table-association-function hash-table)
                          hash key)
-	   :=> (lambda (node)
-                 (%hash-node-set-value!
-                  node (funcall function (%hash-node-value node)))))
+       => (lambda (node)
+            (%hash-node-set-value!
+             node (funcall function (%hash-node-value node)))))
       ((null? maybe-default)
        (error "hash-table-update!: no value exists for key" key))
-      (:else (%hash-table-add! entries hash key
-                               (funcall function
-                                        (funcall (car maybe-default))))
-             (hash-table-set-size! hash-table
-                                   (+ 1 (hash-table-size hash-table)))
-             (%hash-table-maybe-resize! hash-table)))))
+      (else (%hash-table-add! entries hash key
+                              (funcall function
+                                       (funcall (car maybe-default))))
+            (hash-table-set-size! hash-table
+                                  (+ 1 (hash-table-size hash-table)))
+            (%hash-table-maybe-resize! hash-table)))))
+
 
 (define-function (hash-table-update!/default hash-table key function default)
   (hash-table-update! hash-table key function (lambda () default)))
+
 
 (define-function (hash-table-delete! hash-table key)
   (if (%hash-table-delete! (hash-table-entries hash-table)
@@ -224,20 +263,24 @@
 			   (%hash-table-hash hash-table key) key)
     (hash-table-set-size! hash-table (- (hash-table-size hash-table) 1))))
 
+
 (define-function (hash-table-exists? hash-table key)
   (and (%hash-table-find (hash-table-entries hash-table)
 			 (hash-table-association-function hash-table)
 			 (%hash-table-hash hash-table key) key) T))
+
 
 (define-function (hash-table-walk hash-table proc)
   (%hash-table-walk
     (lambda (node) (funcall proc (%hash-node-key node) (%hash-node-value node)))
     (hash-table-entries hash-table)))
 
+
 (define-function (hash-table-fold hash-table f acc)
   (hash-table-walk hash-table
 		       (lambda (key value) (set! acc (funcall f key value acc))))
   acc)
+
 
 (define-function (alist->hash-table alist . args)
   (let* ((comparison (if (null? args) #'equal? (car args)))
@@ -255,9 +298,11 @@
       alist)
     hash-table))
 
+
 (define-function (hash-table->alist hash-table)
   (hash-table-fold hash-table
 		   (lambda (key val acc) (cons (cons key val) acc)) '()))
+
 
 (define-function (hash-table-copy hash-table)
   (let ((new (make-hash-table (hash-table-equivalence-function hash-table)
@@ -268,11 +313,13 @@
 		     (lambda (key value) (hash-table-set! new key value)))
     new))
 
+
 (define-function (hash-table-merge! hash-table1 hash-table2)
   (hash-table-walk
     hash-table2
     (lambda (key value) (hash-table-set! hash-table1 key value)))
   hash-table1)
+
 
 (define-function (hash-table-keys hash-table)
   (hash-table-fold hash-table
@@ -281,6 +328,7 @@
                      (cons key acc))
                    '()))
 
+
 (define-function (hash-table-values hash-table)
   (hash-table-fold hash-table
                    (lambda (key val acc)
@@ -288,4 +336,5 @@
                      (cons val acc) )
                    '() ))
 
-;;; eof
+
+;;; *EOF*
