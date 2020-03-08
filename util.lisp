@@ -1,7 +1,7 @@
 (cl:in-package "https://github.com/g000001/srfi-69#internals")
 
 
-(progn
+(eval-when (:compile-toplevel :load-toplevel :execute)
   (setf (fdefinition 'eq?) #'eq)
   (setf (fdefinition 'integer?) #'integerp)
   (setf (fdefinition 'list?) #'listp)
